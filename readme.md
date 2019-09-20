@@ -102,6 +102,6 @@ I am running a 10 years old MacBook Pro (`10.11.6` - El Capitan) which `doesn't 
 
 Note: I have wasted many hours because of old computer issues.
 
-Copyright of the spec: Stylight. 
+Partial copyright: Stylight. 
 
-All code written by Emin Buğra Saral - 2019.
+Written by Emin Buğra Saral - 2019.
