@@ -1,0 +1,347 @@
+openapi: 3.0.0
+info:
+  version: "1.0.0"
+  title: "Stylight - PAM Challenge"
+  description: "Stylight - PAM Challenge API Specification"
+
+
+servers:
+  - description: Local Test Server
+    url: http://localhost:5000
+
+
+paths:
+
+  /report:
+    get:
+      tags:
+        - Report
+      summary: "Fetch aggregate report"
+      operationId: "main.get_report"
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: "The number of rows to skip before starting to collect the result set"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of rows to return
+        - in: query
+          name: group_by
+          style: spaceDelimited
+          description: >
+            Grouping columns.
+            Unspecified columns will not be present in the output.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+              - date
+              - device_type
+              - category
+              - client
+              - client_group
+              - valid
+        - in: query
+          name: order_by
+          style: spaceDelimited
+          description: >
+            Sorting columns.
+            Should only contain columns specified in group by.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+              - date
+              - device_type
+              - category
+              - client
+              - client_group
+              - valid
+              - -date
+              - -device_type
+              - -category
+              - -client
+              - -client_group
+              - -valid
+        - in: query
+          name: clients
+          style: spaceDelimited
+          description: "Client IDs to filter by."
+          schema:
+            type: array
+            items:
+              type: integer
+              format: i32
+        - in: query
+          name: client_groups
+          style: spaceDelimited
+          description: "Client group IDs to filter by."
+          schema:
+            type: array
+            items:
+              type: integer
+              format: i32
+        - in: query
+          name: device_types
+          style: spaceDelimited
+          description: "Device Types to filter by."
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - desktop
+                - mobile
+                - tablet
+              nullable: true
+        - in: query
+          name: categories
+          style: spaceDelimited
+          description: "Category IDs to filter by."
+          schema:
+            type: array
+            items:
+              type: integer
+              format: i32
+              nullable: true
+        - in: query
+          name: valid
+          description: "Only consider valid or invalid events"
+          schema:
+            type: boolean
+        - in: query
+          name: start_date
+          description: "Only consider events on or after the given date"
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          description: "Only consider events before the given date"
+          schema:
+            type: string
+            format: date
+
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+        400:
+          description: "Invalid / Inconsistent parameters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        406:
+          description: "Invalid Accept"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+  /event:
+    post:
+      tags:
+        - Event
+      summary: "Insert an event"
+      operationId: "main.create_event"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Event"
+      responses:
+        201:
+          description: "Created"
+        400:
+          description: "Invalid payload supplied"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        409:
+          description: "Event already exists"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        406:
+          description: "Invalid Accept"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /event/{event_id}:
+    get:
+      tags:
+        - Event
+      summary: "Find event by ID"
+      description: "Returns a single event."
+      operationId: "main.get_event"
+      parameters:
+        - name: "event_id"
+          in: "path"
+          description: "ID of event to return"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        400:
+          description: "Invalid ID supplied"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: "Event not found"
+        406:
+          description: "Invalid Accept"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - Event
+      summary: "Delete event by ID"
+      description: "Delete a single event."
+      operationId: "main.delete_event"
+      parameters:
+        - name: "event_id"
+          in: "path"
+          description: "ID of event to delete"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        204:
+          description: "OK"
+        400:
+          description: "Invalid ID supplied"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        406:
+          description: "Invalid Accept"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_type:
+          type: string
+          enum:
+            - desktop
+            - mobile
+            - tablet
+          nullable: true
+        category:
+          type: integer
+          format: i32
+          nullable: true
+        client:
+          type: integer
+          format: i32
+        client_group:
+          type: integer
+          format: i32
+        timestamp:
+          type: string
+          format: date-time
+        valid:
+          type: boolean
+        value:
+          type: number
+          format: float
+
+    Report:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            total_count:
+              type: integer
+              format: i32
+            offset:
+              type: integer
+              format: i32
+            page_size:
+              type: integer
+              format: i32
+        rows:
+          type: array
+          items:
+            type: object
+            properties:
+              device_type:
+                type: string
+                enum:
+                  - desktop
+                  - mobile
+                  - tablet
+                nullable: true
+              category:
+                type: integer
+                format: i32
+                nullable: true
+              client:
+                type: integer
+                format: i32
+                nullable: true
+              client_group:
+                type: integer
+                format: i32
+                nullable: true
+              day:
+                type: string
+                format: date
+                nullable: true
+              valid:
+                type: boolean
+                nullable: true
+              count:
+                type: integer
+              sum:
+                type: number
+                format: double
+              mean:
+                type: number
+                format: double
