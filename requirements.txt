@@ -1,0 +1,4 @@
+connexion==2.3.0
+pymongo==3.9.0
+python-benedict==0.7.0
+swagger-ui-bundle
